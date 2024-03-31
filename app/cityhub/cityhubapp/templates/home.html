@@ -1,0 +1,168 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="btn-group mb-3" role="group" aria-label="Post Filters">
+                <button type="button" class="btn btn-secondary filter-btn" data-filter="all">Όλες οι αναρτήσεις</button>
+                <button type="button" class="btn btn-secondary filter-btn" data-filter="complaint">Παράπονα</button>
+                <button type="button" class="btn btn-secondary filter-btn" data-filter="event">Δράσεις</button>
+            </div>
+            <div id="createPostPlaceholder"></div>
+
+            <div id="postsContainer">
+                {% for post in posts_list %}
+                <div class="post all {{ post.type }} mb-4 p-4 border rounded">
+                    <h4>{{ post.title }}</h4>
+                    <h5><i class="bi bi-person-circle"></i> {{ post.published_by.first_name }} {{ post.published_by.last_name }}</h5>
+                    <p>{{ post.text }}</p>
+                    <div class="interaction-buttons">
+                        <button class="btn btn-light"><i class="bi bi-hand-thumbs-up"></i> Like</button>
+                        <button class="btn btn-light"><i class="bi bi-hand-thumbs-down"></i> Dislike</button>
+                        <button class="btn btn-light"><i class="bi bi-chat-dots"></i> Comment</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <h3>Προτεινόμενοι δημότες...</h3>
+            {% for rec_user in user_recommendations %}
+            <div class="recommendation mb-3 p-3 border rounded">
+                <h5><i class="bi bi-person-circle"></i> {{ rec_user.first_name }} {{ rec_user.last_name }}</h5>
+                <button class="btn btn-primary btn-sm">Follow</button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal fade" id="createEventModal" tabindex="-1" aria-labelledby="createEventLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createEventLabel">Δημιουργία Δράσης</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="eventForm">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <div class="form-group">
+                        <label for="eventTitle">Τίτλος</label>
+                        <input type="text" class="form-control" id="eventTitle">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventText">Περιεχόμενο</label>
+                        <textarea class="form-control" id="eventText" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Κλείσιμο</button>
+                <button id="createEventBtn" type="button" class="btn btn-primary">Δημιουργία</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Complaint Modal -->
+<div class="modal fade" id="createComplaintModal" tabindex="-1" aria-labelledby="createComplaintLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="createComplaintLabel">Δημιουργία Παραπόνου</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="complaintForm">
+                    <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                    <div class="form-group">
+                        <label for="complaintTitle">Τίτλος</label>
+                        <input type="text" class="form-control" id="complaintTitle">
+                    </div>
+                    <div class="form-group">
+                        <label for="complaintText">Περιεχόμενο</label>
+                        <textarea class="form-control" id="complaintText" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Κλείσιμο</button>
+                <button id="createComplaintBtn" type="button" class="btn btn-primary">Δημιουργία</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Placeholder function for saving a post. Implement as needed.
+    $(document).ready(function() {
+        $('.filter-btn').on('click', function() {
+            const filter = $(this).attr('data-filter');
+            $('.post').hide();
+            $('.post.' + filter).show();
+
+            let createPostButtonHtml = '';
+            if (filter === 'event') {
+                createPostButtonHtml = '<button type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#createEventModal">Δημιουργία Δράσης</button>';
+            } else if (filter === 'complaint') {
+                createPostButtonHtml = '<button type="button" class="btn btn-primary mb-3" data-toggle="modal" data-target="#createComplaintModal">Δημιουργία Παραπόνου</button>';
+            }
+            $('#createPostPlaceholder').html(createPostButtonHtml);
+        });
+
+        $('.filter-btn[data-filter="all"]').trigger('click');
+
+        $('#createEventBtn').click(function(e){
+            console.log(e);
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'create-event' %}',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                    'title': $('#eventTitle').val(),
+                    'text': $('#eventText').val(),
+                },
+                success: function(response){
+                    alert(response.message);
+                    $('#createEventModal').modal('hide');
+                },
+                error: function(response){
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+
+        $('#createComplaintBtn').click(function(e){
+            console.log(e);
+            e.preventDefault();
+            $.ajax({
+                type: 'POST',
+                url: '{% url 'create-complaint' %}',
+                data: {
+                    'csrfmiddlewaretoken': $('input[name=csrfmiddlewaretoken]').val(),
+                    'title': $('#complaintTitle').val(),
+                    'text': $('#complaintText').val(),
+                },
+                success: function(response){
+                    alert(response.message);
+                    $('#createComplaintModal').modal('hide');
+                },
+                error: function(response){
+                    alert('An error occurred. Please try again.');
+                }
+            });
+        });
+    });
+</script>
+
+{% endblock %}

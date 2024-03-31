@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<div class="container py-5">
+    <div class="row">
+        <!-- Profile Sidebar -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">{{ user.first_name }} {{ user.last_name }}</h5>
+                    <p class="card-text">Δήμος {{ user.municipality }}</p>
+                </div>
+            </div>
+            <!-- About Me -->
+            <div class="mb-3">
+                <h5>Σχετικά</h5>
+                <p>{{ user.brief }}</p>
+            </div>
+            <!-- Interests -->
+            <div>
+                <h5>Ενδιαφέροντα</h5>
+                <div class="interest-box">Coding</div>
+                <div class="interest-box">Hiking</div>
+                <div class="interest-box">Photography</div>
+            </div>
+        </div>
+        <!-- Profile Main Content -->
+        <div class="col-md-8">
+            <div>
+                {% for post in user_posts %}
+                <div class="post all {{ post.type }} mb-4 p-4 border rounded">
+                    <h4>{{ post.title }}</h4>
+                    <h5><i class="bi bi-person-circle"></i> {{ post.published_by.first_name }} {{ post.published_by.last_name }}</h5>
+                    <p>{{ post.text }}</p>
+                    <div class="interaction-buttons">
+                        <button class="btn btn-light"><i class="bi bi-hand-thumbs-up"></i> Like</button>
+                        <button class="btn btn-light"><i class="bi bi-hand-thumbs-down"></i> Dislike</button>
+                        <button class="btn btn-light"><i class="bi bi-chat-dots"></i> Comment</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
