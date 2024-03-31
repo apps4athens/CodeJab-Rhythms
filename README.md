@@ -9,5 +9,5 @@
 * Install requirements:
   - `python -m pip install requirements.txt`
 * Run it:
-- `cd cityhub`
-- `python manage.py runserver`
+  - `cd cityhub`
+  - `python manage.py runserver`
